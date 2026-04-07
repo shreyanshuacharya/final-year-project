@@ -9,9 +9,10 @@ export default function MenuQRCode() {
 
   useEffect(() => {
     // Get the menu URL (use your actual deployed URL in production)
-    const url = typeof window !== 'undefined' 
-      ? `${window.location.origin}/menu`
-      : 'https://yoursite.com/menu'
+    // const url = typeof window !== 'undefined' 
+    //   ? `${window.location.origin}/menu`
+    //   : 'https://yoursite.com/menu'
+    const url = 'http://x.x.x.x:3000/menu'
     
     setMenuUrl(url)
 
