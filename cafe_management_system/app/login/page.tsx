@@ -215,20 +215,20 @@ export default function LoginPage() {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
+              {/* <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-white text-gray-500">New to CaféFlow?</span>
-              </div>
+              </div> */}
             </div>
 
             {/* Sign Up Link */}
-            <div className="text-center">
+            {/* <div className="text-center">
               <Link href="/signup" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition group">
                 Create an account
                 <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>
-            </div>
+            </div> */}
           </div>
 
           {/* Back to Home */}
