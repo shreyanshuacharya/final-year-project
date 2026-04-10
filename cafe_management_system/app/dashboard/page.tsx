@@ -70,6 +70,29 @@ export default async function DashboardPage() {
           </div>
         </div> */}
 
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full"></div>
+        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
+        <div className="relative z-10">
+          <h2 className="text-3xl font-bold mb-2 text-white">Welcome back, {userName}</h2>
+          <p className="text-white opacity-90 mb-4">Manage your café operations from here</p>
+          <div className="flex flex-wrap gap-4">
+            <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+              <div className="text-xs text-white opacity-75">Email</div>
+              <div className="text-sm font-semibold text-white">{user.email}</div>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+              <div className="text-xs text-white opacity-75">Role</div>
+              <div className="text-sm font-semibold capitalize text-white">{userRole}</div>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+              <div className="text-xs text-white opacity-75">Member Since</div>
+              <div className="text-sm font-semibold text-white">{new Date(user.created_at).toLocaleDateString()}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* Quick Actions */}
