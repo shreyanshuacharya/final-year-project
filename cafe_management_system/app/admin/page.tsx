@@ -12,5 +12,5 @@ export default async function AdminPage() {
     redirect('/login')
   }
 
-  return <AdminPanel adminUser={user} />
+  return <AdminPanel  />
 }
