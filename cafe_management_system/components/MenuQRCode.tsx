@@ -12,7 +12,7 @@ export default function MenuQRCode() {
     // const url = typeof window !== 'undefined' 
     //   ? `${window.location.origin}/menu`
     //   : 'https://yoursite.com/menu'
-    const url = 'http://192.168.1.87:3000/menu'
+    const url = 'https://trombone-yard-hacksaw.ngrok-free.dev/menu'
     
     setMenuUrl(url)
 
