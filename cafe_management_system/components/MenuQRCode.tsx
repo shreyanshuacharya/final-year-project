@@ -9,7 +9,7 @@ export default function MenuQRCode() {
 
   useEffect(() => {
     // Get the menu URL (use your actual deployed URL in production)
-    const url = 'https://trombone-yard-hacksaw.ngrok-free.dev/menu'
+    const url = 'https://final-year-project-production-4dff.up.railway.app/menu'
     // const url = typeof window !== 'undefined' 
     //   ? `${window.location.origin}/menu`
     //   : 'https://yoursite.com/menu'
