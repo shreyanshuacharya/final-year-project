@@ -27,6 +27,7 @@ export default function CustomerMenuPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<'khalti' | 'cash'>('khalti')
   const supabase = createClient()
 
   const tableNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -71,51 +72,78 @@ export default function CustomerMenuPage() {
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0)
 
   const handlePlaceOrder = async () => {
-    if (cart.length === 0) return
-    if (orderType === 'dine_in' && !selectedTable) {
-      alert('Please select your table number')
-      return
-    }
+  if (cart.length === 0) return
+  if (orderType === 'dine_in' && !selectedTable) {
+    alert('Please select your table number')
+    return
+  }
 
-    setSubmitting(true)
+  setSubmitting(true)
 
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        table_number: orderType === 'dine_in' ? selectedTable : null,
-        order_type: orderType,
-        status: 'pending',
-        customer_name: customerName || null,
-        notes: notes || null,
-        total_amount: subtotal,
-      })
-      .select()
-      .single()
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      table_number: orderType === 'dine_in' ? selectedTable : null,
+      order_type: orderType,
+      status: 'pending',
+      customer_name: customerName || null,
+      notes: notes || null,
+      total_amount: subtotal,
+      payment_status: 'unpaid',
+      payment_method: paymentMethod,
+    })
+    .select()
+    .single()
 
-    if (orderError || !order) {
-      alert('Failed to place order: ' + (orderError?.message || 'Unknown'))
-      setSubmitting(false)
-      return
-    }
+  if (orderError || !order) {
+    alert('Failed to place order: ' + (orderError?.message || 'Unknown'))
+    setSubmitting(false)
+    return
+  }
 
-    const orderItems = cart.map(i => ({
-      order_id: order.id,
-      menu_item_id: i.id,
-      quantity: i.quantity,
-      price: i.price,
-    }))
+  const orderItems = cart.map(i => ({
+    order_id: order.id,
+    menu_item_id: i.id,
+    quantity: i.quantity,
+    price: i.price,
+  }))
 
-    const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
+  await supabase.from('order_items').insert(orderItems)
 
-    if (itemsError) {
-      alert('Failed to save items: ' + itemsError.message)
-      setSubmitting(false)
-      return
-    }
-
+  // CASH FLOW: show success screen
+  if (paymentMethod === 'cash') {
     setOrderPlaced(true)
     setSubmitting(false)
+    return
   }
+
+  // KHALTI FLOW: redirect to Khalti
+  try {
+    const res = await fetch('/api/khalti/initiate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: order.id,
+        amount: subtotal,
+        customerName: customerName || 'Customer',
+        customerPhone: '9800000000',
+        customerEmail: 'customer@cafeflow.com',
+      }),
+    })
+
+    const data = await res.json()
+
+    if (data.payment_url) {
+      window.location.href = data.payment_url
+    } else {
+      alert('Failed to initiate payment: ' + (data.error || 'Unknown'))
+      setSubmitting(false)
+    }
+  } catch (e: any) {
+    alert('Payment initiation failed: ' + e.message)
+    setSubmitting(false)
+  }
+}
 
   if (loading) {
     return (
@@ -136,9 +164,10 @@ export default function CustomerMenuPage() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Placed!</h1>
           <p className="text-gray-600 mb-4">
-            {orderType === 'dine_in'
-              ? `Your order will be delivered to Table ${selectedTable}.`
-              : 'Your takeaway order is being prepared.'}
+          {orderType === 'dine_in'
+            ? `Your order will be delivered to Table ${selectedTable}.`
+            : 'Your takeaway order is being prepared.'}
+          {paymentMethod === 'cash' && ' Please pay at the counter.'}
           </p>
           <p className="text-3xl font-bold text-green-600 mb-6">Rs. {subtotal.toFixed(2)}</p>
           <button
@@ -276,6 +305,36 @@ export default function CustomerMenuPage() {
                 </div>
               </div>
             )}
+            <div className="mb-4">
+  <p className="text-sm font-semibold text-gray-700 mb-2">Payment Method</p>
+  <div className="grid grid-cols-2 gap-2">
+    <button
+      onClick={() => setPaymentMethod('khalti')}
+      className={`py-3 px-3 rounded-lg font-semibold text-sm transition-all ${
+        paymentMethod === 'khalti'
+          ? 'bg-purple-600 text-white shadow'
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      }`}
+    >
+      💳 Pay with Khalti
+    </button>
+    <button
+      onClick={() => setPaymentMethod('cash')}
+      className={`py-3 px-3 rounded-lg font-semibold text-sm transition-all ${
+        paymentMethod === 'cash'
+          ? 'bg-green-700 text-white shadow'
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      }`}
+    >
+      💵 Pay with Cash
+    </button>
+  </div>
+  <p className="text-xs text-gray-500 mt-2">
+    {paymentMethod === 'khalti'
+      ? 'Pay online now via Khalti.'
+      : 'Pay at the counter after ordering.'}
+  </p>
+</div>
 
             <input
               type="text"
@@ -313,7 +372,11 @@ export default function CustomerMenuPage() {
                     : 'bg-green-600 text-white hover:bg-green-700 shadow'
                 }`}
               >
-                {submitting ? 'Placing...' : 'Place Order'}
+                              {submitting 
+                ? 'Processing...' 
+                : paymentMethod === 'khalti' 
+                  ? 'Place Order & Pay with Khalti' 
+                  : 'Place Order (Pay at Counter)'}
               </button>
             </div>
             {orderType === 'dine_in' && !selectedTable && (
