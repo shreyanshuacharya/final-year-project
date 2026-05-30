@@ -31,6 +31,7 @@ export default function TableOrderPage({ tableNumber: tableNumberProp }: { table
   const [orderType, setOrderType] = useState<'dine_in' | 'takeaway'>('dine_in')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<'khalti' | 'cash'>('cash')
   const router = useRouter()
   const supabase = createClient()
 
@@ -96,6 +97,8 @@ export default function TableOrderPage({ tableNumber: tableNumberProp }: { table
         customer_name: customerName || null,
         notes: notes || null,
         total_amount: subtotal,
+        payment_status: 'unpaid',
+        payment_method: paymentMethod,
       })
       .select()
       .single()

@@ -18,6 +18,8 @@ interface Order {
   total_amount: number
   notes: string | null
   created_at: string
+  payment_status?: string
+  payment_method?: string
   order_items: OrderItem[]
 }
 
@@ -55,6 +57,8 @@ const { data, error } = await supabase
     total_amount,
     notes,
     created_at,
+    payment_status,
+    payment_method,
     order_items (
       quantity,
       price,
@@ -93,6 +97,20 @@ console.log('Bill query result:', { data, error, count: data?.length })
       router.push('/dashboard/tables')
     }
   }
+  const handleMarkAsPaid = async (orderId: string) => {
+  if (!confirm('Confirm cash payment received for this order?')) return
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ payment_status: 'paid' })
+    .eq('id', orderId)
+
+  if (error) {
+    alert('Failed to mark as paid: ' + error.message)
+  } else {
+    fetchBill()
+  }
+}
 
   const calculateGrandTotal = () => orders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
 
@@ -164,19 +182,38 @@ console.log('Bill query result:', { data, error, count: data?.length })
           {/* Each order block */}
           {orders.map((order, idx) => (
             <div key={order.id} className={`${idx > 0 ? 'mt-4 pt-4 border-t border-dashed border-gray-200' : ''}`}>
-              <div className="flex justify-between items-center mb-3">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">
-                    Order #{idx + 1}{order.customer_name ? ` - ${order.customer_name}` : ''}
-                  </p>
-                  <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleTimeString()}</p>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full font-semibold uppercase ${
-                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {order.status}
-                </span>
-              </div>
+             <div className="flex justify-between items-start mb-3">
+  <div>
+    <p className="text-sm font-semibold text-gray-700">
+      Order #{idx + 1}{order.customer_name ? ` - ${order.customer_name}` : ''}
+    </p>
+    <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleTimeString()}</p>
+  </div>
+  <div className="flex flex-col items-end gap-1">
+    <span className={`text-xs px-2 py-1 rounded-full font-semibold uppercase ${
+      order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
+    }`}>
+      {order.status}
+    </span>
+    {order.payment_status === 'paid' ? (
+      <span className="text-xs px-2 py-1 rounded-full font-semibold uppercase bg-green-100 text-green-700">
+        {order.payment_method === 'khalti' ? '💳 Paid (Khalti)' : '💵 Paid (Cash)'}
+      </span>
+    ) : (
+      <span className="text-xs px-2 py-1 rounded-full font-semibold uppercase bg-red-100 text-red-700">
+        {order.payment_method === 'khalti' ? '💳 Unpaid' : '💵 Unpaid (Cash)'}
+      </span>
+    )}
+    {order.payment_status !== 'paid' && order.payment_method === 'cash' && (
+      <button
+        onClick={() => handleMarkAsPaid(order.id)}
+        className="mt-1 text-xs bg-green-600 text-white px-3 py-1 rounded-full font-semibold hover:bg-green-700 print:hidden"
+      >
+        Mark as Paid
+      </button>
+    )}
+  </div>
+</div>
 
               {/* Items */}
               <div className="space-y-2">
